@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-bg-light text-ink font-sans;
+}
+
+/* decorative "room photo" placeholder until real photography is added */
+.photo-placeholder {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #28406c, #0f1c38);
+}
+.photo-placeholder::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    55deg,
+    rgba(255, 255, 255, 0.05) 0 3px,
+    transparent 3px 28px
+  );
+}
+.photo-placeholder.nature {
+  background: linear-gradient(150deg, #2b4a3a, #12271e);
+}
+.photo-placeholder.warm {
+  background: linear-gradient(155deg, #3a2a18, #1c130b);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.reveal {
+  animation: rise 0.7s ease forwards;
+}
