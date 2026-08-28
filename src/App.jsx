@@ -7,10 +7,15 @@ import RoomDetails from './pages/RoomDetails.jsx'
 import Gallery from './pages/Gallery.jsx'
 import Booking from './pages/Booking.jsx'
 import Account from './pages/Account.jsx'
+import AdminLogin from './pages/AdminLogin.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
+import AdminBookings from './pages/admin/AdminBookings.jsx'
+import AdminRooms from './pages/admin/AdminRooms.jsx'
+import AdminOffers from './pages/admin/AdminOffers.jsx'
+import ProtectedAdminRoute from './components/ProtectedAdminRoute.jsx'
 
 // Pages that ship their own header/layout (booking flow, account, admin)
-// and should NOT be wrapped in the public Navbar/Footer.
+// et ne doivent PAS être enveloppées dans le Navbar/Footer public.
 const STANDALONE_PATHS = ['/reservation', '/compte', '/admin']
 
 function PublicLayout({ children }) {
@@ -35,7 +40,12 @@ export default function App() {
       <Route path="/galerie" element={<Gallery />} />
       <Route path="/reservation" element={<Booking />} />
       <Route path="/compte" element={<Account />} />
-      <Route path="/admin" element={<AdminDashboard />} />
+
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
+      <Route path="/admin/reservations" element={<ProtectedAdminRoute><AdminBookings /></ProtectedAdminRoute>} />
+      <Route path="/admin/chambres" element={<ProtectedAdminRoute><AdminRooms /></ProtectedAdminRoute>} />
+      <Route path="/admin/offres" element={<ProtectedAdminRoute><AdminOffers /></ProtectedAdminRoute>} />
     </Routes>
   )
 
