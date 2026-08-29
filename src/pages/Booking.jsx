@@ -5,12 +5,42 @@ import {
 import { Link } from 'react-router-dom'
 import { useRooms } from '../hooks/useRooms.js'
 import { apiFetch } from '../lib/api.js'
+import { isCustomerAuthed, getCustomerInfo } from '../lib/customerAuth.js'
 
 const stepLabels = ['Dates', 'Voyageurs', 'Chambre', 'Coordonnées', 'Résumé', 'Confirmation']
 
 function daysBetween(a, b) {
   const d = Math.round((new Date(b) - new Date(a)) / 86400000)
   return Math.max(1, d || 1)
+}
+
+function downloadConfirmation({ resNum, room, checkin, checkout, nights, total, guest }) {
+  const lines = [
+    'HÔTEL EL AZIZ — Confirmation de réservation',
+    '='.repeat(44),
+    '',
+    `Numéro de réservation : ${resNum}`,
+    `Chambre               : ${room?.name || ''}`,
+    `Arrivée                : ${checkin}`,
+    `Départ                 : ${checkout}`,
+    `Nombre de nuits        : ${nights}`,
+    `Client                 : ${guest.name}`,
+    `Téléphone              : ${guest.phone}`,
+    `Email                  : ${guest.email}`,
+    `Total                  : ${total.toLocaleString()} DA`,
+    '',
+    'Conservez ce numéro : il vous permettra de suivre votre',
+    'réservation sur hotel-el-aziz.vercel.app/compte.',
+  ]
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${resNum}.txt`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }
 
 export default function Booking() {
@@ -27,6 +57,14 @@ export default function Booking() {
   const [resNum, setResNum] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [bookingError, setBookingError] = useState('')
+
+  // Pré-remplit les coordonnées si le client est connecté
+  useEffect(() => {
+    if (isCustomerAuthed()) {
+      const c = getCustomerInfo()
+      if (c) setGuest((g) => ({ ...g, name: g.name || c.name || '', email: g.email || c.email || '', phone: g.phone || c.phone || '' }))
+    }
+  }, [])
 
   // Choisit une chambre par défaut (Chambre Double si disponible) dès que la liste arrive
   useEffect(() => {
@@ -50,6 +88,7 @@ export default function Booking() {
     setSubmitting(true)
     setBookingError('')
     try {
+      const customer = isCustomerAuthed() ? getCustomerInfo() : null
       const booking = await apiFetch('/bookings', {
         method: 'POST',
         body: JSON.stringify({
@@ -62,6 +101,7 @@ export default function Booking() {
           guest_name: guest.name,
           guest_email: guest.email,
           guest_phone: guest.phone,
+          customer_id: customer?.id ?? null,
         }),
       })
       setResNum(booking.reservation_number)
@@ -175,8 +215,8 @@ export default function Booking() {
 
           {step === 3 && (
             <div>
-              <h2 className="font-display text-2xl text-navy-deep mb-1.5">Chambres disponibles</h2>
-              <p className="text-ink-soft text-sm mb-7">{nights} nuits · {adults} adultes{children ? `, ${children} enfants` : ''}</p>
+              <h2 className="font-display text-2xl text-navy-deep mb-1.5">Choisissez votre chambre</h2>
+              <p className="text-ink-soft text-sm mb-7">Sélectionnez le type de chambre qui vous convient</p>
 
               <div className="space-y-3.5 mb-7">
                 {roomsLoading ? (
@@ -303,7 +343,7 @@ export default function Booking() {
                 <Check size={36} className="text-[#3E8B5C]" />
               </div>
               <h2 className="font-display text-2xl mb-1.5">Votre réservation est confirmée ✓</h2>
-              <p className="text-ink-soft text-sm">Un email de confirmation a été envoyé</p>
+              <p className="text-ink-soft text-sm">Notez bien votre numéro de réservation ci-dessous</p>
               <div className="inline-block bg-bg border border-dashed border-gold px-5 py-2 rounded-lg font-bold text-navy tracking-wide my-4">
                 {resNum}
               </div>
@@ -320,7 +360,10 @@ export default function Booking() {
                 ))}
               </div>
               <div className="flex gap-3 justify-center flex-wrap">
-                <button className="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-navy-deep font-bold px-6 py-3 rounded-lg text-sm">
+                <button
+                  onClick={() => downloadConfirmation({ resNum, room: selectedRoom, checkin, checkout, nights, total, guest })}
+                  className="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-navy-deep font-bold px-6 py-3 rounded-lg text-sm"
+                >
                   <Download size={16} /> Télécharger la confirmation
                 </button>
                 <Link to="/" className="inline-flex items-center gap-2 border border-line text-ink-soft hover:border-navy hover:text-navy px-6 py-3 rounded-lg text-sm">

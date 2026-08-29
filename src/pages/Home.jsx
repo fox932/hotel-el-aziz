@@ -6,6 +6,7 @@ import {
 import BookingSearchBar from '../components/BookingSearchBar.jsx'
 import RoomCard from '../components/RoomCard.jsx'
 import { useRooms } from '../hooks/useRooms.js'
+import OffersSection from '../components/OffersSection.jsx'
 
 const services = [
   { icon: Wifi, title: 'Wi-Fi gratuit', text: "Internet disponible dans les espaces de l'hôtel." },
@@ -111,6 +112,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <OffersSection />
 
       {/* Services */}
       <section className="bg-bg py-24">
